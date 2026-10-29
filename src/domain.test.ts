@@ -1,0 +1,4 @@
+import {describe,it,expect} from 'vitest';
+import {decimalCents,parseFountain} from './domain';
+import {initialDemo} from './demo';
+describe('demo production model',()=>{it('rejects invalid financial input',()=>{expect(decimalCents('18.09')).toBe(1809);expect(()=>decimalCents('1e4')).toThrow()});it('imports scenes associated with selected project',()=>{const scenes=parseFountain('INT. ROOM - NIGHT\nDialogue\nEXT. ROAD - DAY','project-2');expect(scenes).toHaveLength(2);expect(scenes.every(s=>s.projectId==='project-2')).toBe(true)});it('keeps all fictional demo records inside existing projects',()=>{const ids=new Set(initialDemo.projects.map(p=>p.id));for(const [table,rows] of Object.entries(initialDemo)){if(table!=='projects')expect(rows.every(row=>ids.has(row.projectId!))).toBe(true)}})});

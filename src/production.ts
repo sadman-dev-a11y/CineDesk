@@ -1,0 +1,4 @@
+export function parseMoney(input:string):number {if(!/^\d+(\.\d{1,2})?$/.test(input))throw new Error('Enter a non-negative amount with up to two decimal places');const [whole,fraction='']=input.split('.');const cents=Number(whole)*100+Number(fraction.padEnd(2,'0'));if(!Number.isSafeInteger(cents))throw new Error('Amount too large');return cents}
+export function csvCell(value:unknown):string {let text=String(value??'');if(/^[=+@\-\t\r]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"'}
+export function fountainScenes(text:string){return text.split(/\r?\n/).map(s=>s.trim()).filter(s=>/^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)\s/i.test(s)).map((heading,index)=>({number:index+1,heading,interior:heading.startsWith('INT.'),time:/\bNIGHT\b/i.test(heading)?'Night':'Day'}))}
+export function overlap(a:{start:string;end:string},b:{start:string;end:string}){return a.start<b.end&&b.start<a.end}
