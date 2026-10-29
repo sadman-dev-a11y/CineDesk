@@ -1,0 +1,50 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [CineDesk]
+    paths: ['src/**', 'public/**', 'scripts/**', 'package*.json', 'capacitor.config.*', 'vite.config.*', 'index.html', '.github/workflows/build-android-apk.yml']
+permissions:
+  contents: read
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - name: Build bundled web app
+        run: npm run build
+        env:
+          GITHUB_PAGES: 'false'
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      - name: Generate branded Android project and sync bundled assets
+        run: node scripts/prepare-android.mjs
+      - name: Compile debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Verify compiled package
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p apk-output
+          cp android/app/build/outputs/apk/debug/app-debug.apk apk-output/CineDesk-debug.apk
+          unzip -t apk-output/CineDesk-debug.apk
+          sha256sum apk-output/CineDesk-debug.apk
+      - uses: actions/upload-artifact@v6
+        with:
+          name: CineDesk-Android-APK
+          path: apk-output/CineDesk-debug.apk
+          if-no-files-found: error
+          retention-days: 30
